@@ -1,7 +1,7 @@
 # jwt
 # Запуск
-Запустить Docker Desktop
-Прописать в CLI: docker compose up -d
+- Запустить Docker Desktop
+- Прописать в CLI: docker compose up -d
 
 **Используемые технологии:**
 
