@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgre
+      POSTGRES_PASSWORD: postgre
+      POSTGRES_DB: postgre
+    ports:
+      - "5433:5432"
+    networks:
+      - app-network
+
+  app:
+    build: .
+    environment:
+      DB_URL: "postgresql://postgre:postgre@db:5433/postgre?sslmode=disable"
+    depends_on:
+      - db
+    networks:
+      - app-network
+    ports:
+      - "8080:8080"
+
+networks:
+  app-network:
