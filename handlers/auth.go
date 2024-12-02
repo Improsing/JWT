@@ -129,12 +129,15 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request, DB *sql.DB) {
 	}
 
 	var storedHash, userID, lastIP string
-	query := `SELECT refresh_token_hash, user_id, ip_address FROM refresh_tokens WHERE refresh_token_hash = $1`
-	err := DB.QueryRow(query, refreshReq.RefreshToken).Scan(&storedHash, &userID, &lastIP)
-	if err != nil {
-		http.Error(w, "Неверный refresh токен", http.StatusUnauthorized)
-		return
-	}
+    query := `SELECT refresh_token_hash, user_id, ip_address FROM refresh_tokens WHERE refresh_token_hash = $1`
+    err := DB.QueryRow(query, refreshReq.RefreshToken).Scan(&storedHash, &userID, &lastIP)
+    if err == sql.ErrNoRows {
+        http.Error(w, "Неверный refresh токен", http.StatusUnauthorized)
+        return
+    } else if err != nil {
+        http.Error(w, "Ошибка базы данных", http.StatusInternalServerError)
+        return
+    }
 
 	// Сравнение хэша и токена
 	err = bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(refreshReq.RefreshToken))
@@ -159,7 +162,7 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request, DB *sql.DB) {
 		RefreshToken: newRefreshToken,
 	}
 	
-	w.Header().Set("Content/Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(authResp)
 }
 
@@ -176,7 +179,7 @@ func SendEmailWarning(userID string) {
 		"Причина: " + subject + "\n\n" +
 		body
 
-	// Конфигурация SMTP сервера (моковые данные)
+	// Конфигурация SMTP сервера (мок данные)
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 	auth := smtp.PlainAuth("", from, "pass", smtpHost)
